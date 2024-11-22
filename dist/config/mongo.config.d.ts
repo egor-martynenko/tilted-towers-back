@@ -1,3 +1,3 @@
 import { ConfigService } from '@nestjs/config';
-import { MongooseModuleOptions } from '@nestjs/mongoose';
-export declare const getMongoDbConfig: (configService: ConfigService) => Promise<MongooseModuleOptions>;
+import { TypegooseModuleOptions } from '@m8a/nestjs-typegoose';
+export declare const getMongoDbConfig: (configService: ConfigService) => Promise<TypegooseModuleOptions>;

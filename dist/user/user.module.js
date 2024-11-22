@@ -10,13 +10,27 @@ exports.UserModule = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const user_controller_1 = require("./user.controller");
+const nestjs_typegoose_1 = require("@m8a/nestjs-typegoose");
+const user_model_1 = require("./user.model");
+const config_1 = require("@nestjs/config");
 let UserModule = class UserModule {
 };
 exports.UserModule = UserModule;
 exports.UserModule = UserModule = __decorate([
     (0, common_1.Module)({
+        imports: [
+            nestjs_typegoose_1.TypegooseModule.forFeature([
+                {
+                    typegooseClass: user_model_1.UserModel,
+                    schemaOptions: {
+                        collection: 'User',
+                    },
+                },
+            ]),
+            config_1.ConfigModule,
+        ],
         providers: [user_service_1.UserService],
-        controllers: [user_controller_1.UserController]
+        controllers: [user_controller_1.UserController],
     })
 ], UserModule);
 //# sourceMappingURL=user.module.js.map

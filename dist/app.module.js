@@ -11,10 +11,11 @@ const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const config_1 = require("@nestjs/config");
-const mongoose_1 = require("@nestjs/mongoose");
 const mongo_config_1 = require("./config/mongo.config");
 const auth_module_1 = require("./auth/auth.module");
 const user_module_1 = require("./user/user.module");
+const nestjs_typegoose_1 = require("@m8a/nestjs-typegoose");
+const account_module_1 = require("./account/account.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -22,13 +23,14 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot(),
-            mongoose_1.MongooseModule.forRootAsync({
+            nestjs_typegoose_1.TypegooseModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
                 useFactory: mongo_config_1.getMongoDbConfig,
             }),
             auth_module_1.AuthModule,
             user_module_1.UserModule,
+            account_module_1.AccountModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
