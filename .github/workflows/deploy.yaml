@@ -1,0 +1,144 @@
+name: CI/CD Pipeline for Backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: 'Choose the type of deployment'
+        required: true
+        default: 'back_app'
+        type: choice
+        options:
+          - back_app
+          - mongodb
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      # Добавление сервера в known_hosts для предотвращения ошибок при SSH-соединении
+      - name: Add server to known hosts
+        continue-on-error: true
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || echo "Server not found, skipping."
+
+      # Проверка успешности соединения с сервером по SSH
+      - name: Test SSH Connection
+        run: |
+          ssh -i ~/.ssh/id_rsa -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
+
+      # Клонирование репозитория из GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      # Увеличение версии приложения
+      - name: Bump Version
+        id: version
+        run: |
+          if [ ! -f version.txt ]; then echo "0.1.0" > version.txt; fi
+          VERSION=$(cat version.txt)
+          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF++; print}')
+          echo "$NEW_VERSION" > version.txt
+          echo "VERSION_TAG=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      # Коммит и пуш обновленной версии в репозиторий
+      - name: Commit Updated Version
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git add version.txt
+          git commit -m "Bump version to ${{ steps.version.outputs.VERSION_TAG }}"
+          git push
+
+      # Удаление старых контейнеров и файлов на сервере
+      - name: Remove old containers and files
+        run: |
+          ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "\
+          docker stop backend-app || true && docker rm backend-app || true && \
+          rm -rf /home/${{ secrets.SERVER_USER }}/backend-app-*.tar.gz"
+
+      # Сборка образа Docker приложения с тегом версии
+      - name: Build Docker Image for BackAndDb
+        run: |
+          docker build -f Dockerfile -t backend-app:${{ steps.version.outputs.VERSION_TAG }} .
+
+      # Создание .env файла
+      - name: Create .env from GitHub Secrets
+        run: |
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" > .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" > .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
+          echo "DB_MONGO_NAME=${{ secrets.DB_MONGO_NAME }}" > .env
+          echo "DB_MONGO_USER =${{ secrets.DB_MONGO_USER }}" >> .env
+          echo "DB_MONGO_PASSWORD=${{ secrets.DB_MONGO_PASSWORD }}" >> .env
+          echo "APP_PORT=${{ secrets.APP_PORT}}" >> .env
+          echo "DB_MONGO_HOST=${{ secrets.DB_MONGO_HOST }}" >> .env
+          echo "VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }}" >> .env
+
+      # Сохранение и загрузка образа Docker на сервер
+      - name: Save and Upload Docker Image for BackAndDb
+        run: |
+          docker save backend-app:${{ steps.version.outputs.VERSION_TAG }} > backend-app-${{ steps.version.outputs.VERSION_TAG }}.tar
+          scp -P 22 backend-app-${{ steps.version.outputs.VERSION_TAG }}.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/backend/
+
+      # Копирование файла .env на сервер
+      - name: Copy .env to Server
+        run: |
+          scp -P 22 .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/backend/.env
+
+      # Загрузка образа Docker на сервер
+      - name: Load Docker Image for BackAndDb on Server
+        run: |
+          ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker load < /home/${{ secrets.SERVER_USER }}/backend/backend-app-${{ steps.version.outputs.VERSION_TAG }}.tar"
+
+      # Проверка загруженного файла на сервере
+      - name: Verify uploaded file
+        run: |
+          ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "ls -lh /home/${{ secrets.SERVER_USER }}/backend/backend-app-${{ steps.version.outputs.VERSION_TAG }}.tar"
+
+      # Установка типа развертывания
+      - name: Set Deployment Type
+        id: deploy_file
+        run: |
+          if [ "${{ github.event.inputs.deploy_type }}" == "back_app" ]; then
+            echo "COMPOSE_FILE=compose.back-app.yaml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=backend_app" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.deploy_type }}" == "mongodb" ]; then
+            echo "COMPOSE_FILE=compose.mongoDB.yaml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=db_mongo" >> $GITHUB_ENV
+          else
+            echo "COMPOSE_FILE=compose.catalog.full.yaml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=" >> $GITHUB_ENV
+          fi
+
+      # Копирование файла Docker Compose на сервер
+      - name: Copy Docker Compose File for BackAndDb to Server
+        run: |
+          scp -P 22 compose.back-app.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/backend/compose.back-app.yaml
+
+      # Запуск развертывания приложения на сервере с использованием Docker Compose
+      - name: Deploy BackAndDb Application
+        run: |
+          ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+          VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }} docker compose -f /home/${{ secrets.SERVER_USER }}/backend/compose.back-app.yaml up -d --force-recreate"
+
+      # Удаление старых образов Docker на сервере
+      - name: Clean up old images
+        run: |
+          ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker images backend-app | tail -n +2 | grep -v ${{ steps.version.outputs.VERSION_TAG }} | awk '{print \$3}' | xargs -r docker rmi"
+
+      # Отправка уведомления о успешном завершении развертывания
+      - name: Send Successful Deployment Notification
+        if: steps.container_status.outcome == 'success'
+        run: |
+          MESSAGE="✅ Деплой приложения успешно завершен! Новая версия: ${{ steps.version.outputs.VERSION_TAG }}!"
