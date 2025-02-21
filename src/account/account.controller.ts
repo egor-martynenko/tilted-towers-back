@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -13,9 +14,7 @@ import {
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { Auth } from '../auth/decorators/auth.decorator';
-import { User } from '../user/decorators/user.decorator';
 import { IdValidationPipe } from '../pipes/id.validation.pipe';
-import { UpdateUserDto } from '../user/dto/updateUser.dto';
 import { AddAccountDto } from './dto/addAccount.dto';
 
 @Controller('accounts')
@@ -24,7 +23,10 @@ export class AccountController {
 
   @Get('by-slug/:slug')
   async bySlug(@Param('slug') slug: string) {
-    return this.accountService.bySlug(slug);
+    const account = await this.accountService.bySlug(slug);
+    if (!account)
+      throw new NotFoundException(`Account with slug ${slug} not found`);
+    return account;
   }
 
   @Get('count')

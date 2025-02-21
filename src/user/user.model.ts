@@ -11,4 +11,10 @@ export class UserModel extends TimeStamps {
 
   @prop({ default: false })
   isAdmin: boolean;
+
+  @prop({ default: 0 })
+  activeChatsCount: number;
+
+  @prop({ default: null })
+  lastActive?: Date;
 }

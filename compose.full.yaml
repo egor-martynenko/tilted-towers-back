@@ -1,0 +1,50 @@
+version: '1'
+services:
+
+  db_mongo:
+    image: mongo:7.0.8
+    container_name: mongo_tilted_towers
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_MONGO_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_MONGO_PASSWORD}
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb:/data/db
+    networks:
+      - app_network
+    restart: always
+
+  backend_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: backend-app:${VERSION_TAG}
+    container_name: backend-app
+    ports:
+      - '8080:80'
+    environment:
+      - API_URL=${API_URL}
+      - NODE_ENV=${NODE_ENV}
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_MONGO_USER=${DB_MONGO_USER}
+      - DB_MONGO_NAME=${DB_MONGO_NAME}
+      - DB_MONGO_PASSWORD=${DB_MONGO_PASSWORD}
+      - DB_MONGO_HOST=${DB_MONGO_HOST}
+      - VERSION_TAG=${VERSION_TAG}
+    networks:
+      - app_network
+    depends_on:
+      - db_mongo  # Просто ждет старта MongoDB (не проверяет готовность)
+    restart: always
+
+volumes:
+  mongodb:
+
+networks:
+  app_network:
+    external: true

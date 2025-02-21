@@ -42,6 +42,16 @@ export class AccountService {
       images: [],
       tags: [],
       price: 0,
+      parameters: {
+        outfits: 0,
+        level: 0,
+        emotes: 0,
+        gliders: 0,
+        vbucks: 0,
+        pickaxes: 0,
+        backbling: 0,
+        loadings: 0,
+      },
     };
     const account = await this.AccountModel.create(defaultValue);
     return account._id;
