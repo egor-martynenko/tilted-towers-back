@@ -31,22 +31,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || echo "Server not found, skipping."
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519  # Устанавливаем права на приватный ключ
-          eval $(ssh-agent -s)        # Запускаем ssh-agent
-          ssh-add ~/.ssh/id_ed25519    # Добавляем ключ в агент
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       # Проверка успешности соединения с сервером по SSH
       - name: Test SSH Connection
         run: |
-          ssh -v -i ~/.ssh/id_ed25519 -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
-          cat ~/.ssh/id_ed25519 # Проверьте содержимое файла
-          chmod 600 ~/.ssh/id_ed25519
+          ssh -i ~/.ssh/id_rsa -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
 
       # Клонирование репозитория из GitHub
       - name: Checkout Repository
