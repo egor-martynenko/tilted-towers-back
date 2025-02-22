@@ -30,6 +30,14 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || echo "Server not found, skipping."
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H your.server.ip >> ~/.ssh/known_hosts
+          # Отключаем автоматическую загрузку других ключей
+          echo "IdentitiesOnly yes" >> ~/.ssh/config     
 
       # Проверка успешности соединения с сервером по SSH
       - name: Test SSH Connection
