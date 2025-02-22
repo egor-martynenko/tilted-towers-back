@@ -34,7 +34,7 @@ jobs:
       # Проверка успешности соединения с сервером по SSH
       - name: Test SSH Connection
         run: |
-          ssh -i ~/.ssh/id_rsa -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
+          ssh -i ~/.ssh/id_ed25519 -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
 
       # Клонирование репозитория из GitHub
       - name: Checkout Repository
