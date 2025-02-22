@@ -26,7 +26,7 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo ${{ secrets.SSH_PRIVATE_KEY }} > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa  # Устанавливаем права на приватный ключ
           eval $(ssh-agent -s)        # Запускаем ssh-agent
           ssh-add ~/.ssh/id_rsa       # Добавляем ключ в агент
