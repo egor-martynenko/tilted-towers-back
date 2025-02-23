@@ -6,7 +6,7 @@ on:
       deploy_type:
         description: 'Choose the type of deployment'
         required: true
-        default: 'back_app'
+        default: 'mongodb'
         type: choice
         options:
           - back_app
