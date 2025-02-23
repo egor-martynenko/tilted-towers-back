@@ -90,7 +90,7 @@ jobs:
           DB_MONGO_NAME=${{ secrets.DB_MONGO_NAME }}
           DB_MONGO_USER=${{ secrets.DB_MONGO_USER }}
           DB_MONGO_PASSWORD=${{ secrets.DB_MONGO_PASSWORD }}
-          APP_PORT=${{ secrets.APP_PORT }}
+          DB_MONGO_PORT=${{ secrets.DB_MONGO_PORT }}
           DB_MONGO_HOST=${{ secrets.DB_MONGO_HOST }}
           VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }}
           EOF

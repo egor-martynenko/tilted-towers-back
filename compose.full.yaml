@@ -27,7 +27,6 @@ services:
     ports:
       - '8080:80'
     environment:
-      - API_URL=${API_URL}
       - NODE_ENV=${NODE_ENV}
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
@@ -36,6 +35,8 @@ services:
       - DB_MONGO_PASSWORD=${DB_MONGO_PASSWORD}
       - DB_MONGO_HOST=${DB_MONGO_HOST}
       - VERSION_TAG=${VERSION_TAG}
+      - DB_MONGO_PORT=${DB_MONGO_PORT}
+
     networks:
       - app_network
     depends_on:

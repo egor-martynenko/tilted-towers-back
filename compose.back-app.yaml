@@ -9,7 +9,6 @@ services:
     ports:
       - '8080:80'
     environment:
-      - API_URL=${API_URL}
       - NODE_ENV=${NODE_ENV}
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
