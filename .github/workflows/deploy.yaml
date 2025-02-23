@@ -34,10 +34,8 @@ jobs:
 
       # Добавление сервера в known_hosts
       - name: Add server to known hosts
-        continue-on-error: true
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts || echo "Server not found, skipping."
+          ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP }} > ~/.ssh/known_hosts
 
       # Проверка успешности соединения с сервером по SSH
       - name: Test SSH Connection
@@ -85,15 +83,17 @@ jobs:
       # Создание .env файла
       - name: Create .env from GitHub Secrets
         run: |
-          echo "NODE_ENV=${{ secrets.NODE_ENV }}" > .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" > .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
-          echo "DB_MONGO_NAME=${{ secrets.DB_MONGO_NAME }}" > .env
-          echo "DB_MONGO_USER =${{ secrets.DB_MONGO_USER }}" >> .env
-          echo "DB_MONGO_PASSWORD=${{ secrets.DB_MONGO_PASSWORD }}" >> .env
-          echo "APP_PORT=${{ secrets.APP_PORT}}" >> .env
-          echo "DB_MONGO_HOST=${{ secrets.DB_MONGO_HOST }}" >> .env
-          echo "VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }}" >> .env
+          cat <<EOF > .env
+          NODE_ENV=${{ secrets.NODE_ENV }}
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          DB_MONGO_NAME=${{ secrets.DB_MONGO_NAME }}
+          DB_MONGO_USER=${{ secrets.DB_MONGO_USER }}
+          DB_MONGO_PASSWORD=${{ secrets.DB_MONGO_PASSWORD }}
+          APP_PORT=${{ secrets.APP_PORT }}
+          DB_MONGO_HOST=${{ secrets.DB_MONGO_HOST }}
+          VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }}
+          EOF
 
       # Сохранение и загрузка образа Docker на сервер
       - name: Save and Upload Docker Image for BackAndDb
