@@ -136,15 +136,16 @@ jobs:
           fi
 
       # Копирование файла Docker Compose на сервер
-      - name: Copy Docker Compose File for BackAndDb to Server
+      - name: Copy Docker Compose File to Server
         run: |
-          scp -P 22 compose.back-app.yaml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/backend/compose.back-app.yaml
+          scp -P 22 ${{ github.workspace }}/${{ env.COMPOSE_FILE }} \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/backend/compose.yaml
 
       # Запуск развертывания приложения на сервере с использованием Docker Compose
       - name: Deploy BackAndDb Application
         run: |
           ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-          VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }} docker compose -f /home/${{ secrets.SERVER_USER }}/backend/compose.back-app.yaml up -d --force-recreate"
+          VERSION_TAG=${{ steps.version.outputs.VERSION_TAG }} docker compose -f /home/${{ secrets.SERVER_USER }}/backend/compose.yaml up -d --force-recreate"
 
       # Удаление старых образов Docker на сервере
       - name: Clean up old images
