@@ -6,7 +6,7 @@ on:
       deploy_type:
         description: 'Choose the type of deployment'
         required: true
-        default: 'mongodb'
+        default: 'back_app'
         type: choice
         options:
           - back_app
@@ -115,6 +115,10 @@ jobs:
       - name: Verify uploaded file
         run: |
           ssh -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "ls -lh /home/${{ secrets.SERVER_USER }}/backend/backend-app-${{ steps.version.outputs.VERSION_TAG }}.tar"
+
+      - name: Debug deploy_type
+        run: |
+         echo "Deploy type is: ${{ github.event.inputs.deploy_type }}"
 
       # Установка типа развертывания
       - name: Set Deployment Type
