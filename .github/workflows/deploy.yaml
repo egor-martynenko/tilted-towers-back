@@ -128,8 +128,8 @@ jobs:
             echo "COMPOSE_FILE=compose.back-app.yaml" >> $GITHUB_ENV
             echo "SERVICE_NAME=backend_app" >> $GITHUB_ENV
           elif [ "${{ github.event.inputs.deploy_type }}" == "mongodb" ]; then
-            echo "COMPOSE_FILE=compose.mongoDB.yaml" >> $GITHUB_ENV
-            echo "SERVICE_NAME=db_mongo" >> $GITHUB_ENV
+            echo "COMPOSE_FILE=compose.mongodb.yaml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=mongodb" >> $GITHUB_ENV
           else
             echo "COMPOSE_FILE=compose.full.yaml" >> $GITHUB_ENV
             echo "SERVICE_NAME=" >> $GITHUB_ENV
