@@ -18,13 +18,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-#
       # Установка SSH-ключа для подключения к серверу
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+          config: |
+            Host server
+              HostName ${{ secrets.SERVER_IP }}
+              User ${{ secrets.SERVER_USER }}
+              Port 22
+              IdentityFile ~/.ssh/id_rsa
 
 
       # Добавление сервера в known_hosts
@@ -37,7 +42,9 @@ jobs:
       # Проверка успешности соединения с сервером по SSH
       - name: Test SSH Connection
         run: |
-          ssh -i ~/.ssh/id_rsa -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
+          ssh -vvv -i ~/.ssh/id_rsa -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful!'"
+
+
       # Клонирование репозитория из GitHub
       - name: Checkout Repository
         uses: actions/checkout@v4
